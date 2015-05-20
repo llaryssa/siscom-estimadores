@@ -1,5 +1,5 @@
 function [frames, nchapeu] = eomLee (L, ss, sc)
-    thres = 0.0015;
+    thres = 0.001;
     ended = 0;
     yant = 2;
 
