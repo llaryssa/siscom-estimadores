@@ -1,22 +1,22 @@
 clc %limpa a tela
 clear all;
-maxsimulacoes  = 2000; %numero max de simulacoes, proj = 2000
+maxsimulacoes  = 100; %numero max de simulacoes, proj = 2000
 initialframe = 64; %numero inicial de slots no frame, proj = 64
-initialetiquetas = 100 ; % numero inicial de etiquetas para cada teste , proj = 100
+initialetiquetas = 100; % numero inicial de etiquetas para cada teste , proj = 100
 stepetiquetas = 100; % numero do passo do for de etiquetas, proj = 100
 finaletiquetas = 1000; % numero final de etiquetas, proj  = 1000
 
-for algorithm = 1:3
+for algorithm = 3:3
     
     grcolisoes = [];
     grvazio = [];
-    grsucesso = [];
+    gracuracia = [];
     grframes = [];
 
 for etiquetas = initialetiquetas:stepetiquetas:finaletiquetas
     simcolisoes = [];
     simvazio = [];
-    simsucesso = [];
+    simacuracia = [];
     simframes = [];
     
     for simulacao = 1:maxsimulacoes
@@ -27,7 +27,7 @@ for etiquetas = initialetiquetas:stepetiquetas:finaletiquetas
         
         totalcolisoes = 0;
         totalvazio = 0;
-        totalsucesso = 0;
+        totalacuracia = 0;
         totalframes = 0;
         
         while ~terminou
@@ -52,33 +52,32 @@ for etiquetas = initialetiquetas:stepetiquetas:finaletiquetas
                 terminou = true;
             else
                 if algorithm == 1
-                    frames = frames + 2*colisoes;
+                    [frames, nestimado] = lowerBound(sucesso, colisoes);
                 elseif algorithm == 2
-                    frames = frames + 2.38*colisoes;
+                    [frames, nestimado] = schoute(sucesso, colisoes);
                 elseif algorithm == 3
                     [frames, nestimado] = eomLee(frames, sucesso, colisoes);
                 end
-                
                   frames = round(frames);
             end
             
             % atualizando os graficos
             totalcolisoes = totalcolisoes + colisoes;
             totalvazio = totalvazio + vazio;
-            totalsucesso = totalsucesso + sucesso;
+            totalacuracia = totalacuracia + abs(etiquetas - nestimado);
             totalframes = totalframes + frames;
         end
         
         simcolisoes = [simcolisoes totalcolisoes];
         simvazio = [simvazio totalvazio];
         simframes = [simframes totalframes];
-        simsucesso = [simsucesso totalsucesso];
+        simacuracia = [simacuracia (totalacuracia/iteracoes)];
                
     end
     
     grcolisoes = [grcolisoes [etiquetas; mean(simcolisoes)]];
     grvazio = [grvazio [etiquetas; mean(simvazio)]];
-    grsucesso = [grsucesso [etiquetas; mean(simsucesso)]];
+    gracuracia = [gracuracia [etiquetas; mean(simacuracia)]];
     grframes = [grframes [etiquetas; mean(simframes)]];
     
     disp('-------------------------------------');
@@ -88,48 +87,48 @@ end
 
     todoscolisoes(:,:,algorithm) = grcolisoes;
     todosvazio(:,:,algorithm) = grvazio;
-    todossucesso(:,:,algorithm) = grsucesso;
+    todosacuracia(:,:,algorithm) = gracuracia;
     todosframes(:,:,algorithm) = grframes;
 
 end
 
-figure; hold on;
-plot(todoscolisoes(1,:,1), todoscolisoes(2,:,1), 'm');
-plot(todoscolisoes(1,:,2), todoscolisoes(2,:,2), 'r');
-plot(todoscolisoes(1,:,3), todoscolisoes(2,:,3), 'b');
+figure; hold on; grid on;
+plot(todoscolisoes(1,:,1), todoscolisoes(2,:,1), '-om');
+plot(todoscolisoes(1,:,2), todoscolisoes(2,:,2), '-dr');
+plot(todoscolisoes(1,:,3), todoscolisoes(2,:,3), '-*b');
 legend('Lower-Bound', 'Schoute', 'Eom-Lee');
 title('Colisões'); 
 xlabel('Quantidade de etiquetas');
-ylabel('Quantidade de colisões');
+ylabel('Quantidade de colisÃµes');
 print('colisoes', '-dpng');
 
-figure; hold on;
-plot(todossucesso(1,:,1), todossucesso(2,:,1), 'm');
-plot(todossucesso(1,:,2), todossucesso(2,:,2), 'r');
-plot(todossucesso(1,:,3), todossucesso(2,:,3), 'b');
+figure; hold on; grid on;
+plot(todosacuracia(1,:,1), todosacuracia(2,:,1), '-om');
+plot(todosacuracia(1,:,2), todosacuracia(2,:,2), '-dr');
+plot(todosacuracia(1,:,3), todosacuracia(2,:,3), '-*b');
 legend('Lower-Bound', 'Schoute', 'Eom-Lee');
-title('Sucessos'); 
+title('Acurácia'); 
 xlabel('Quantidade de etiquetas');
-ylabel('Quantidade de sucessos');
+ylabel('Acurácia');
 print('sucessos', '-dpng');
 
-figure; hold on;
-plot(todosvazio(1,:,1), todosvazio(2,:,1), 'm');
-plot(todosvazio(1,:,2), todosvazio(2,:,2), 'r');
-plot(todosvazio(1,:,3), todosvazio(2,:,3), 'b');
+figure; hold on; grid on;
+plot(todosvazio(1,:,1), todosvazio(2,:,1), '-om');
+plot(todosvazio(1,:,2), todosvazio(2,:,2), '-dr');
+plot(todosvazio(1,:,3), todosvazio(2,:,3), '-*b');
 legend('Lower-Bound', 'Schoute', 'Eom-Lee');
 title('Slots vazios'); 
 xlabel('Quantidade de etiquetas');
 ylabel('Quantidade de slots vazios');
 print('vazios', '-dpng');
 
-figure; hold on;
-plot(todosframes(1,:,1), todosframes(2,:,1), 'm');
-plot(todosframes(1,:,2), todosframes(2,:,2), 'r');
-plot(todosframes(1,:,3), todosframes(2,:,3), 'b');
+figure; hold on; grid on;
+plot(todosframes(1,:,1), todosframes(2,:,1), '-om');
+plot(todosframes(1,:,2), todosframes(2,:,2), '-dr');
+plot(todosframes(1,:,3), todosframes(2,:,3), '-*b');
 legend('Lower-Bound', 'Schoute', 'Eom-Lee');
 title('Número de slots'); 
 xlabel('Quantidade de etiquetas');
-ylabel('Números de slots');
+ylabel('NÃºmeros de slots');
 print('slots', '-dpng');
 
